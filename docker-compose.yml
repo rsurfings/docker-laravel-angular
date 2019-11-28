@@ -1,0 +1,45 @@
+version: '2'
+services:
+    webserver:
+        build:
+            context: ./
+            dockerfile: deploy/webserver.docker
+        volumes:
+            - ./server:/var/www
+        ports:
+            - "8080:80"
+        links:
+            - server
+    server:
+        build:
+            context: ./
+            dockerfile: deploy/server.docker
+        volumes:
+            - ./server:/var/www
+        links:
+            - database
+            - cache
+        environment:
+            - "DB_PORT=3306"
+            - "DB_HOST=database"
+            - "REDIS_PORT=6379"
+            - "REDIS_HOST=cache"
+    database:
+        image: mysql:5.6
+        environment:
+            - "MYSQL_ROOT_PASSWORD=secret"
+            - "MYSQL_DATABASE=dockerApp"
+        ports:
+            - "33061:3306"
+    cache:
+        image: redis:3.0
+        ports:
+            - "63791:6379"
+    client:
+        build:
+            context: ./
+            dockerfile: deploy/client.docker
+        volumes: # Volume binding
+            - './client/frontend:/app' 
+        ports: 
+            - '80:80' # Port mapping
